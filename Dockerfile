@@ -8,4 +8,6 @@ RUN curl -L $URL | tar xzvf - --strip-components=1
 FROM scratch
 
 COPY --from=build oauth2_proxy /
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
 ENTRYPOINT ["/oauth2_proxy"]
