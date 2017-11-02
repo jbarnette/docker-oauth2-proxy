@@ -1,13 +1,15 @@
-FROM debian:stretch-slim as build
+FROM golang as build
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --yes curl
+RUN go get -d github.com/bitly/oauth2_proxy
+WORKDIR /go/src/github.com/bitly/oauth2_proxy
 
-ARG URL=https://github.com/bitly/oauth2_proxy/releases/download/v2.2/oauth2_proxy-2.2.0.linux-amd64.go1.8.1.tar.gz
-RUN curl -L $URL | tar xzvf - --strip-components=1
+COPY token.patch ./
+RUN git apply token.patch
+RUN CGO_ENABLED=0 go install
 
 FROM scratch
 
-COPY --from=build oauth2_proxy /
+COPY --from=build /go/bin/oauth2_proxy /
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 ENTRYPOINT ["/oauth2_proxy"]
